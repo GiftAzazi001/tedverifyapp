@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>TED Verify</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --brand:#4C1D95;--brand-2:#5B21B6;--brand-3:#6D28D9;
+  --brand-light:#EDE9FE;--brand-mid:#DDD6FE;--brand-text:#3B0764;--brand-faint:#F5F3FF;
+  --ink:#0F0A1E;--ink-2:#2E1F52;--ink-3:#6B6080;--ink-4:#9E93B8;--ink-5:#C4BBDC;
+  --rule:#EAE5F5;--rule-2:#D8D0EF;--surface:#fff;--surface-2:#F8F6FD;--surface-3:#F0EDFB;
+  --green:#059669;--gl:#D1FAE5;--gt:#064E3B;
+  --amber:#D97706;--al:#FEF3C7;--at:#78350F;
+  --red:#DC2626;--rl:#FEE2E2;--rt:#7F1D1D;
+  --r:6px;--rl2:10px;--rxl:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Outfit',sans-serif;background:var(--surface-2);color:var(--ink);font-size:14px;line-height:1.6;min-height:100vh}
+#tb{background:var(--brand);display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;position:sticky;top:0;z-index:100;box-shadow:0 2px 14px rgba(76,29,149,.4)}
+.brand{display:flex;align-items:center;cursor:pointer}
+.brand img{height:30px;width:auto;display:block}
+.tnav{display:flex;gap:2px}
+.nb{background:none;border:none;color:rgba(255,255,255,.6);font-family:'Outfit',sans-serif;font-size:13.5px;padding:7px 13px;border-radius:6px;cursor:pointer;transition:all .15s}
+.nb:hover,.nb.on{background:rgba(255,255,255,.12);color:#fff}
+.tr{display:flex;align-items:center;gap:8px}
+.prole{font-size:11px;font-family:'DM Mono',monospace;background:rgba(255,255,255,.15);color:rgba(255,255,255,.85);padding:3px 10px;border-radius:20px}
+#app{display:flex;min-height:calc(100vh - 56px)}
+#sb{width:222px;min-width:222px;background:var(--surface);border-right:1px solid var(--rule);padding:14px 0;display:flex;flex-direction:column;gap:1px}
+.sbs{padding:6px 18px 3px;font-size:10px;font-weight:600;color:var(--ink-4);text-transform:uppercase;letter-spacing:.1em;margin-top:10px}
+.sbb{display:flex;align-items:center;gap:10px;padding:9px 18px;cursor:pointer;font-size:13.5px;color:var(--ink-3);border:none;background:none;font-family:'Outfit',sans-serif;transition:all .12s;text-align:left;width:100%}
+.sbb:hover{background:var(--surface-2);color:var(--ink)}
+.sbb.on{background:var(--brand-faint);color:var(--brand);font-weight:500;border-right:2px solid var(--brand)}
+.sbi{width:18px;text-align:center;font-size:14px}
+.sbg{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-family:'DM Mono',monospace;padding:1px 6px;border-radius:20px}
+#mn{flex:1;overflow-y:auto}
+.sc{display:none}.sc.on{display:block}
+.ph{background:var(--surface);border-bottom:1px solid var(--rule);padding:22px 28px 18px;display:flex;justify-content:space-between;align-items:flex-end}
+.pht{font-size:22px;font-weight:700;color:var(--ink);letter-spacing:-.02em}
+.phs{font-size:13px;color:var(--ink-3);margin-top:2px}
+.ct{padding:24px 28px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:6px;font-family:'Outfit',sans-serif;font-size:13.5px;font-weight:500;cursor:pointer;transition:all .15s;border:1px solid transparent}
+.bp{background:var(--brand);color:#fff}.bp:hover{background:var(--brand-2)}
+.bo{background:none;color:var(--ink-2);border-color:var(--rule-2)}.bo:hover{background:var(--surface-2)}
+.bd{background:var(--red);color:#fff}.bd:hover{opacity:.88}
+.bg{background:none;border:none;color:var(--ink-3)}.bg:hover{color:var(--ink);background:var(--surface-2)}
+.bs{padding:5px 11px;font-size:12.5px}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:20px;box-shadow:0 1px 3px rgba(76,29,149,.08)}
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.sc2{background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:18px 20px;box-shadow:0 1px 3px rgba(76,29,149,.08);border-top:3px solid var(--brand)}
+.sv{font-size:32px;font-weight:700;color:var(--ink);line-height:1;margin-bottom:4px}
+.sl{font-size:12px;color:var(--ink-3)}
+.sb2{display:inline-block;font-size:11px;padding:2px 7px;border-radius:20px;font-family:'DM Mono',monospace;margin-top:6px}
+.bup{background:var(--brand-light);color:var(--brand-text)}.bchn{background:var(--brand-light);color:var(--brand)}.bwrn{background:var(--al);color:var(--at)}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead th{text-align:left;padding:9px 12px;font-size:11px;font-weight:600;color:var(--ink-4);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--rule);background:var(--surface-2)}
+tbody td{padding:10px 12px;font-size:13px;border-bottom:1px solid var(--rule);color:var(--ink-2)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--brand-faint)}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:20px;font-size:11px;font-family:'DM Mono',monospace;font-weight:500}
+.pill::before{content:'';width:5px;height:5px;border-radius:50%}
+.pg{background:var(--gl);color:var(--gt)}.pg::before{background:var(--green)}
+.pa{background:var(--al);color:var(--at)}.pa::before{background:var(--amber)}
+.pr{background:var(--rl);color:var(--rt)}.pr::before{background:var(--red)}
+.pb{background:#DBEAFE;color:#1E40AF}.pb::before{background:#3B82F6}
+.pc{background:var(--brand-light);color:var(--brand)}.pc::before{background:var(--brand)}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fr{display:flex;flex-direction:column;gap:5px}
+.fr.full{grid-column:1/-1}
+label{font-size:12.5px;font-weight:500;color:var(--ink-2)}
+input,select,textarea{font-family:'Outfit',sans-serif;font-size:13.5px;padding:9px 12px;border:1.5px solid var(--rule-2);border-radius:6px;color:var(--ink);background:var(--surface);transition:border-color .15s;width:100%;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--brand-3);box-shadow:0 0 0 3px rgba(109,40,217,.1)}
+input::placeholder{color:var(--ink-5)}
+.ht{font-size:11.5px;color:var(--ink-4)}
+.fs{margin-bottom:22px}
+.fst{font-size:11.5px;font-weight:600;color:var(--ink-4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--rule)}
+.uz{border:2px dashed var(--rule-2);border-radius:10px;padding:24px;text-align:center;cursor:pointer;transition:all .15s}
+.uz:hover{border-color:var(--brand-3);background:var(--brand-faint)}
+.ui{font-size:28px;margin-bottom:8px}.ul{font-size:13px;color:var(--ink-2);font-weight:500}.us{font-size:11.5px;color:var(--ink-4);margin-top:3px}
+.cw{background:#fff;border:1px solid var(--rule-2);border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(76,29,149,.12)}
+.ch{background:linear-gradient(135deg,var(--brand) 0%,var(--brand-3) 100%);padding:20px 28px;display:flex;align-items:center;gap:14px}
+.chl{height:34px;width:auto;display:block}
+.cin{font-size:17px;font-weight:700;color:#fff;line-height:1.2}
+.cis{font-size:11px;color:rgba(255,255,255,.55);margin-top:2px}
+.cb{padding:24px 28px}
+.ctl{font-size:10px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-4);margin-bottom:8px}
+.ctt{font-size:24px;font-weight:700;color:var(--ink);margin-bottom:18px;letter-spacing:-.02em}
+.cff{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+.cfl{font-size:10.5px;color:var(--ink-4);text-transform:uppercase;letter-spacing:.07em}
+.cfv{font-size:14px;font-weight:500;color:var(--ink);margin-top:2px}
+.cir{display:flex;align-items:center;justify-content:space-between;background:var(--brand-faint);border:1.5px solid var(--brand-mid);border-radius:10px;padding:12px 16px}
+.cil{font-size:10px;color:var(--ink-4);text-transform:uppercase;letter-spacing:.07em}
+.civ{font-family:'DM Mono',monospace;font-size:14px;font-weight:500;color:var(--ink);margin-top:3px}
+.civ .sp{color:var(--ink-4)}.civ .si{color:var(--brand)}.civ .sx{color:var(--brand-3);font-weight:600}
+.cf{border-top:1px solid var(--rule);padding:12px 28px;display:flex;align-items:center;justify-content:space-between;background:var(--surface-2)}
+.cfc{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--brand);font-family:'DM Mono',monospace}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--brand);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.cfh{font-size:10px;color:var(--ink-4);font-family:'DM Mono',monospace}
+.vh{text-align:center;padding:28px 0 16px}
+.vi{width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:26px}
+.vok{background:var(--gl)}.vno{background:var(--rl)}
+.vt{font-size:20px;font-weight:700;margin-bottom:4px}
+.vs{font-size:13px;color:var(--ink-3)}
+.mbg{display:none;position:fixed;inset:0;background:rgba(15,10,30,.5);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.mbg.on{display:flex}
+.modal{background:var(--surface);border-radius:14px;width:90%;max-width:560px;box-shadow:0 24px 64px rgba(76,29,149,.25);overflow:hidden}
+.mh{padding:18px 22px 14px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center}
+.mt{font-size:16px;font-weight:600;color:var(--ink)}
+.mb{padding:20px 22px}
+.mf{padding:14px 22px;border-top:1px solid var(--rule);display:flex;justify-content:flex-end;gap:8px}
+.tabs{display:flex;border-bottom:1px solid var(--rule);margin-bottom:20px}
+.tb2{padding:9px 16px;cursor:pointer;font-size:13px;color:var(--ink-3);border:none;background:none;font-family:'Outfit',sans-serif;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.tb2:hover{color:var(--ink)}.tb2.on{color:var(--brand);border-bottom-color:var(--brand);font-weight:500}
+.tp{display:none}.tp.on{display:block}
+.stk{display:flex;align-items:center;margin-bottom:28px}
+.sti{display:flex;align-items:center;gap:8px;flex:1}
+.stn{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;border:2px solid var(--rule-2);color:var(--ink-4);transition:all .3s}
+.sti.on .stn{border-color:var(--brand);color:var(--brand)}
+.sti.dn .stn{background:var(--brand);border-color:var(--brand);color:#fff}
+.stl{font-size:12px;color:var(--ink-4)}
+.sti.on .stl{color:var(--ink);font-weight:500}.sti.dn .stl{color:var(--brand)}
+.stln{flex:1;height:1.5px;background:var(--rule-2);max-width:36px;transition:background .3s}
+.sti.dn+.stln{background:var(--brand)}
+.dv{border:none;border-top:1px solid var(--rule);margin:18px 0}
+.mono{font-family:'DM Mono',monospace}
+.tr2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
+.tc{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.sr{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.stt{font-size:15px;font-weight:600;color:var(--ink)}
+@keyframes fi{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.fi{animation:fi .3s ease forwards}
+@keyframes sp{to{transform:rotate(360deg)}}
+.spn{width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .6s linear infinite;display:none}
+.loading .spn{display:inline-block}
+.hero{background:var(--brand);position:relative;overflow:hidden}
+.hg{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:40px 40px}
+.hi{position:relative;z-index:1;padding:64px 40px 56px;text-align:center}
+.hb{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:4px 14px;font-size:12px;color:rgba(255,255,255,.8);margin-bottom:22px;font-family:'DM Mono',monospace}
+.hti{font-size:50px;font-weight:700;color:#fff;letter-spacing:-.04em;line-height:1.08;margin-bottom:16px}
+.hti em{color:rgba(255,255,255,.5);font-style:normal}
+.hsu{font-size:16px;color:rgba(255,255,255,.6);max-width:500px;margin:0 auto 32px;line-height:1.6}
+.hbs{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.hbp{background:#fff;color:var(--brand);font-family:'Outfit',sans-serif;font-weight:700;font-size:14px;padding:12px 24px;border-radius:10px;cursor:pointer;border:none;transition:all .15s;box-shadow:0 4px 14px rgba(0,0,0,.15)}
+.hbp:hover{transform:translateY(-1px)}
+.hbs2{background:rgba(255,255,255,.12);color:#fff;font-family:'Outfit',sans-serif;font-size:14px;padding:12px 24px;border-radius:10px;cursor:pointer;border:1.5px solid rgba(255,255,255,.25);transition:all .15s}
+.hbs2:hover{background:rgba(255,255,255,.18)}
+.fg2{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:32px 28px}
+.fc{background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:20px;box-shadow:0 1px 3px rgba(76,29,149,.08);transition:transform .2s}
+.fc:hover{transform:translateY(-2px)}
+.fi2{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:12px}
+.ft{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:6px}
+.fd{font-size:13px;color:var(--ink-3);line-height:1.55}
+.how{padding:0 28px 36px}
+.hwt{font-size:18px;font-weight:700;color:var(--ink);margin-bottom:20px}
+.hws{display:flex;position:relative}
+.hwi{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;position:relative}
+.hwn{width:34px;height:34px;border-radius:50%;background:var(--brand);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-bottom:10px;position:relative;z-index:1}
+.hwl{position:absolute;top:17px;left:calc(50% + 17px);right:0;height:1.5px;background:var(--brand-mid)}
+.hwi:last-child .hwl{display:none}
+.hwit{font-size:12.5px;font-weight:600;color:var(--ink-2);margin-bottom:3px}
+.hwid{font-size:11.5px;color:var(--ink-4)}
+#toast{position:fixed;bottom:24px;right:24px;background:var(--ink);color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;z-index:999;transform:translateY(60px);opacity:0;transition:all .25s;max-width:340px;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+#toast.on{transform:translateY(0);opacity:1}
+#toast.s{border-left:3px solid #10B981}
+#toast.e{border-left:3px solid var(--red)}
+</style>
+</head>
+<body>
+
+<div id="tb">
+  <div class="brand" onclick="sv('landing')"><img src="data:image/png;base64,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" alt="TED Verify"></div>
+  <div class="tnav">
+    <button class="nb on" onclick="sv('landing')">Home</button>
+    <button class="nb" onclick="sv('inst')">Institution Portal</button>
+    <button class="nb" onclick="sv('verify')">Verify Certificate</button>
+    <button class="nb" onclick="sv('admin')">Admin</button>
+  </div>
+  <div class="tr">
+    <span class="prole" id="rp">Guest</span>
+    <button class="btn bs" style="background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.25);color:#fff;font-size:12.5px" onclick="sm('ml')">Sign in</button>
+  </div>
+</div>
+<div id="app">
+<div id="sb" style="display:none">
+  <div class="sbs">Overview</div>
+  <button class="sbb on" onclick="sp('db')"><span class="sbi">&#9635;</span>Dashboard</button>
+  <div class="sbs">Credentials</div>
+  <button class="sbb" onclick="sp('up')"><span class="sbi">&#8593;</span>Upload Credentials</button>
+  <button class="sbb" onclick="sp('ce')"><span class="sbi">&#10040;</span>All Certificates</button>
+  <div class="sbs">Institution</div>
+  <button class="sbb" onclick="sp('as')"><span class="sbi">&#9633;</span>Assets &amp; Branding</button>
+  <button class="sbb" onclick="sp('se')"><span class="sbi">&#8857;</span>Settings</button>
+  <div id="an" style="display:none">
+    <div class="sbs">Admin</div>
+    <button class="sbb" onclick="sp('ai')"><span class="sbi">&#8853;</span>Institutions<span class="sbg" id="pc">3</span></button>
+    <button class="sbb" onclick="sp('al')"><span class="sbi">&#8801;</span>Audit Logs</button>
+  </div>
+</div>
+<div id="mn">
+
+<!-- LANDING -->
+<div class="sc on" id="sc-landing">
+  <div class="hero"><div class="hg"></div>
+    <div class="hi">
+      <div class="hb"><span style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.5);display:inline-block"></span>&nbsp;Powered by Polygon Blockchain</div>
+      <div class="hti">Academic credentials<br><em>the world can trust</em></div>
+      <div class="hsu">Blockchain-anchored certificates issued by accredited institutions. Verified in under 3 seconds.</div>
+      <div class="hbs">
+        <button class="hbp" onclick="sv('onboard')">Get Started &mdash; Institutions</button>
+        <button class="hbs2" onclick="sv('verify')">Verify a Certificate</button>
+      </div>
+    </div>
+  </div>
+  <div class="fg2">
+    <div class="fc"><div class="fi2" style="background:var(--brand-light)">&#9939;</div><div class="ft">Blockchain anchored</div><div class="fd">Every certificate hash is permanently recorded on Polygon. Tamper-proof and immutable forever.</div></div>
+    <div class="fc"><div class="fi2" style="background:#DBEAFE">&#9889;</div><div class="ft">Instant verification</div><div class="fd">Scan a QR code or enter a certificate ID. Full blockchain verification in under 3 seconds.</div></div>
+    <div class="fc"><div class="fi2" style="background:var(--al)">&#127963;</div><div class="ft">Accredited only</div><div class="fd">Only verified, accredited institutions can issue credentials. Admin-approved onboarding.</div></div>
+    <div class="fc"><div class="fi2" style="background:var(--gl)">&#10040;</div><div class="ft">Branded certificates</div><div class="fd">Institutions upload logo, signature, and template for fully branded PDFs.</div></div>
+    <div class="fc"><div class="fi2" style="background:var(--rl)">&#128274;</div><div class="ft">Non-guessable IDs</div><div class="fd">TED-CODE-SECURE_ID format with 51.8 bits of entropy. Rate-limited verification.</div></div>
+    <div class="fc"><div class="fi2" style="background:var(--surface-3)">&#8801;</div><div class="ft">Full audit trail</div><div class="fd">Every verification, upload, and approval logged with timestamps and verifier metadata.</div></div>
+  </div>
+  <div class="how"><div class="hwt">How it works</div>
+    <div class="hws">
+      <div class="hwi"><div class="hwn">1</div><div class="hwl"></div><div class="hwit">Onboard</div><div class="hwid">Submit accreditation proof</div></div>
+      <div class="hwi"><div class="hwn">2</div><div class="hwl"></div><div class="hwit">Upload</div><div class="hwid">CSV or single credential entry</div></div>
+      <div class="hwi"><div class="hwn">3</div><div class="hwl"></div><div class="hwit">Hash &amp; Anchor</div><div class="hwid">SHA-256 anchored on Polygon</div></div>
+      <div class="hwi"><div class="hwn">4</div><div class="hwl"></div><div class="hwit">Issue</div><div class="hwid">PDF with QR code and TED ID</div></div>
+      <div class="hwi"><div class="hwn">5</div><div class="hwl"></div><div class="hwit">Verify</div><div class="hwid">QR scan or ID lookup, under 3s</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- INSTITUTION PORTAL -->
+<div class="sc" id="sc-inst">
+  <!-- DASHBOARD -->
+  <div id="pg-db">
+    <div class="ph"><div><div class="pht">Dashboard</div><div class="phs">University of Calabar &middot; <span class="mono" style="font-size:12px;color:var(--brand);font-weight:600">UNICAL</span> &middot; <span class="pill pg" style="font-size:10px">Active</span></div></div><button class="btn bp" onclick="sp('up')">&#8593;&nbsp;Upload Credentials</button></div>
+    <div class="ct">
+      <div class="sg"><div class="sc2"><div class="sv" id="st-total">247</div><div class="sl">Total Credentials</div><div class="sb2 bup">+12 this month</div></div><div class="sc2"><div class="sv">241</div><div class="sl">Blockchain Anchored</div><div class="sb2 bchn">Polygon</div></div><div class="sc2"><div class="sv">1,203</div><div class="sl">Verifications</div><div class="sb2 bup">+34%</div></div><div class="sc2"><div class="sv">6</div><div class="sl">Pending Anchor</div><div class="sb2 bwrn">Queued</div></div></div>
+      <div class="tc">
+        <div class="card"><div class="sr"><div class="stt">Recent Certificates</div><button class="btn bo bs" onclick="sp('ce')">View all &rarr;</button></div><div class="tw"><table><thead><tr><th>Certificate ID</th><th>Student</th><th>Degree</th><th>Status</th></tr></thead><tbody id="rc-body"></tbody></table></div></div>
+        <div class="card"><div class="sr"><div class="stt">Verifications &mdash; Last 7 Days</div></div><div id="vc" style="height:150px;display:flex;align-items:flex-end;gap:6px;padding:4px 0"></div><div style="font-size:11px;color:var(--ink-4);text-align:center;margin-top:8px">Daily verification requests</div></div>
+      </div>
+    </div>
+  </div>
+  <!-- UPLOAD -->
+  <div id="pg-up" style="display:none">
+    <div class="ph"><div><div class="pht">Upload Credentials</div><div class="phs">Issue new certificates or bulk import via CSV</div></div></div>
+    <div class="ct">
+      <div class="stk"><div class="sti on" id="s1"><div class="stn">1</div><div class="stl">Enter Details</div></div><div class="stln"></div><div class="sti" id="s2"><div class="stn">2</div><div class="stl">Generate &amp; Hash</div></div><div class="stln"></div><div class="sti" id="s3"><div class="stn">3</div><div class="stl">Anchor to Chain</div></div><div class="stln"></div><div class="sti" id="s4"><div class="stn">4</div><div class="stl">Issue Certificate</div></div></div>
+      <div class="tabs"><button class="tb2 on" onclick="st('t-si','u-tabs')">Single Upload</button><button class="tb2" onclick="st('t-cs','u-tabs')">CSV Bulk Import</button></div>
+      <div id="u-tabs">
+        <div class="tp on" id="t-si"><div class="card" style="max-width:680px"><div class="fs"><div class="fst">Student Information</div><div class="fg"><div class="fr"><label>Full Name *</label><input id="fn" type="text" placeholder="Adaeze Okonkwo"></div><div class="fr"><label>Matric Number *</label><input id="fm" type="text" placeholder="UNC/2019/0045"></div><div class="fr"><label>Degree *</label><input id="fd" type="text" placeholder="Bachelor of Science"></div><div class="fr"><label>Program of Study *</label><input id="fp" type="text" placeholder="Computer Science"></div><div class="fr"><label>Graduation Year *</label><input id="fy" type="number" placeholder="2024" min="1990" max="2030"></div><div class="fr"><label>Issuance Date *</label><input id="fdt" type="date"></div></div></div><div id="dw" style="display:none;padding:10px 14px;background:var(--al);border:1px solid var(--amber);border-radius:6px;margin-bottom:14px;font-size:13px;color:var(--at)">&#9888; Duplicate detected &mdash; a credential with this matric number may already exist.</div><div style="display:flex;gap:10px"><button class="btn bp" id="bi" onclick="issue()"><span class="spn" id="is"></span>Issue Credential</button><button class="btn bo" onclick="clf()">Clear</button></div></div></div>
+        <div class="tp" id="t-cs"><div class="card" style="max-width:680px"><div class="uz" onclick="simCsv()"><div class="ui">&#128203;</div><div class="ul">Drop CSV file here or click to browse</div><div class="us">Required: name, matric_number, degree, program, year, date</div></div><div id="cpv" style="display:none;margin-top:18px"><div class="sr"><div style="font-size:13.5px;font-weight:600">Preview &mdash; 5 records</div><button class="btn bp bs" onclick="bulkIss()">Issue All 5</button></div><div class="tw"><table><thead><tr><th>Name</th><th>Matric</th><th>Degree</th><th>Year</th><th>Status</th></tr></thead><tbody><tr><td>Emeka Eze</td><td>UNC/2020/001</td><td>B.Eng Civil</td><td>2024</td><td><span class="pill pa">Pending</span></td></tr><tr><td>Fatima Bello</td><td>UNC/2020/002</td><td>B.Sc Chemistry</td><td>2024</td><td><span class="pill pa">Pending</span></td></tr><tr><td>Chidi Obi</td><td>UNC/2020/003</td><td>LLB Law</td><td>2024</td><td><span class="pill pa">Pending</span></td></tr><tr><td>Ngozi Adeyemi</td><td>UNC/2020/004</td><td>B.Pharm</td><td>2024</td><td><span class="pill pa">Pending</span></td></tr><tr><td>Tunde Williams</td><td>UNC/2020/005</td><td>B.Ed Mathematics</td><td>2024</td><td><span class="pill pg">Ready</span></td></tr></tbody></table></div></div></div></div>
+      </div>
+    </div>
+  </div>
+  <!-- CERTIFICATES -->
+  <div id="pg-ce" style="display:none">
+    <div class="ph"><div><div class="pht">All Certificates</div><div class="phs">Issued credentials for University of Calabar</div></div><input type="text" placeholder="Search by name or ID..." style="width:220px" id="cs" oninput="fltc()"></div>
+    <div class="ct"><div class="card"><div class="tw"><table><thead><tr><th>Certificate ID</th><th>Student</th><th>Degree</th><th>Program</th><th>Year</th><th>Chain</th><th></th></tr></thead><tbody id="ct-body"></tbody></table></div></div></div>
+  </div>
+  <!-- ASSETS -->
+  <div id="pg-as" style="display:none">
+    <div class="ph"><div><div class="pht">Assets &amp; Branding</div><div class="phs">Upload your certificate template, logo, and signature</div></div></div>
+    <div class="ct"><div class="card" style="max-width:680px"><div class="fs"><div class="fst">Certificate Template</div><div class="uz" onclick="toast('Template uploaded','s')"><div class="ui">&#128444;</div><div class="ul">Upload certificate template (PNG or PDF)</div><div class="us">Recommended: A4 at 300dpi</div></div></div><div class="fg"><div class="fs"><div class="fst">Institution Logo</div><div class="uz" onclick="toast('Logo uploaded','s')"><div class="ui">&#127963;</div><div class="ul">Upload logo PNG</div></div></div><div class="fs"><div class="fst">Signature</div><div class="uz" onclick="toast('Signature uploaded','s')"><div class="ui">&#9997;</div><div class="ul">Upload signature PNG</div></div></div></div><button class="btn bp" onclick="toast('Assets saved','s')">Save Assets</button></div></div>
+  </div>
+  <!-- SETTINGS -->
+  <div id="pg-se" style="display:none">
+    <div class="ph"><div class="pht">Settings</div></div>
+    <div class="ct"><div class="card" style="max-width:640px"><div class="fs"><div class="fst">Institution Details</div><div class="fg"><div class="fr full"><label>Institution Name</label><input type="text" value="University of Calabar"></div><div class="fr"><label>Email Domain</label><input type="text" value="unical.edu.ng" readonly style="background:var(--surface-2)"></div><div class="fr"><label>Institution Code</label><input type="text" value="UNICAL" readonly style="background:var(--surface-2);font-family:'DM Mono',monospace;color:var(--brand);font-weight:600"><span class="ht">Cannot be changed after approval</span></div></div></div><button class="btn bp" onclick="toast('Settings saved','s')">Save Changes</button></div></div>
+  </div>
+  <!-- ADMIN: INSTITUTIONS -->
+  <div id="pg-ai" style="display:none">
+    <div class="ph"><div><div class="pht">Manage Institutions</div><div class="phs">Review and approve institution applications</div></div></div>
+    <div class="ct"><div class="tabs"><button class="tb2 on" onclick="st('at-p','a-tabs')">Pending <span style="background:var(--red);color:#fff;font-size:10px;padding:1px 5px;border-radius:10px;margin-left:4px" id="ptc">3</span></button><button class="tb2" onclick="st('at-a','a-tabs')">Approved</button><button class="tb2" onclick="st('at-s','a-tabs')">Suspended</button></div>
+    <div id="a-tabs">
+      <div class="tp on" id="at-p"><div class="card"><div class="tw"><table><thead><tr><th>Institution</th><th>Email</th><th>Code</th><th>Accreditation</th><th>Applied</th><th></th></tr></thead><tbody id="pt-body"></tbody></table></div></div></div>
+      <div class="tp" id="at-a"><div class="card"><div class="tw"><table><thead><tr><th>Institution</th><th>Code</th><th>Credentials</th><th>Verifications</th><th>Status</th><th></th></tr></thead><tbody id="at-body"></tbody></table></div></div></div>
+      <div class="tp" id="at-s"><div class="card"><div style="text-align:center;padding:48px 20px;color:var(--ink-4)"><div style="font-size:36px;margin-bottom:10px">&#128274;</div><div style="font-size:14px;font-weight:500;color:var(--ink-3)">No suspended institutions</div></div></div></div>
+    </div></div>
+  </div>
+  <!-- ADMIN: LOGS -->
+  <div id="pg-al" style="display:none">
+    <div class="ph"><div class="pht">Audit Logs</div><div class="phs">Immutable record of all platform events</div></div>
+    <div class="ct"><div class="card"><div class="tw"><table><thead><tr><th>Timestamp</th><th>Event</th><th>Actor</th><th>Certificate ID</th><th>Detail</th></tr></thead><tbody id="lg-body"></tbody></table></div></div></div>
+  </div>
+</div>
+
+<!-- VERIFY PUBLIC -->
+<div class="sc" id="sc-verify">
+  <div class="ph"><div><div class="pht">Verify Certificate</div><div class="phs">Enter a certificate ID or scan a QR code to verify authenticity</div></div></div>
+  <div class="ct" style="max-width:720px">
+    <div class="card" style="margin-bottom:18px"><div class="stt" style="margin-bottom:14px">Enter Certificate ID</div><div style="display:flex;gap:10px"><input type="text" id="vi" placeholder="TED-UNICAL-7F3K9QX2D8" style="font-family:'DM Mono',monospace;font-size:14px;flex:1;text-transform:uppercase" onkeydown="if(event.key==='Enter')runV()"><button class="btn bp" onclick="runV()">Verify &rarr;</button></div><div class="ht" style="margin-top:8px">Format: TED-INSTITUTION_CODE-10CHARID</div></div>
+    <div id="vra" style="display:none;margin-bottom:18px"></div>
+    <div class="card"><div class="stt" style="margin-bottom:12px">Try a demo certificate</div><div style="display:flex;gap:8px;flex-wrap:wrap" id="di"></div><div class="ht" style="margin-top:10px">Click any ID above to verify instantly</div></div>
+  </div>
+</div>
+
+<!-- ONBOARDING -->
+<div class="sc" id="sc-onboard">
+  <div class="ph"><div><div class="pht">Institution Signup</div><div class="phs">Register your institution on TED Verify</div></div></div>
+  <div class="ct"><div class="card" style="max-width:640px"><div class="fs"><div class="fst">Institution Information</div><div class="fg"><div class="fr full"><label>Institution Name *</label><input id="rn" type="text" placeholder="University of Calabar"></div><div class="fr"><label>Official Email *</label><input id="re" type="email" placeholder="registrar@unical.edu.ng"></div><div class="fr"><label>Institution Code *</label><input id="rc" type="text" placeholder="UNICAL" maxlength="10" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z]/g,'')"><span class="ht">3-10 uppercase letters. Will prefix all IDs: TED-CODE-XXXXXXXXXX</span></div><div class="fr"><label>Password *</label><input id="rpw" type="password" placeholder="Min 8 characters"></div><div class="fr"><label>Accreditation Body</label><input id="rb" type="text" placeholder="NUC / NBTE / NCCE"></div><div class="fr"><label>Accreditation Number</label><input id="ra" type="text" placeholder="NUC/2024/UNI/001"></div></div></div><div class="fs"><div class="fst">Accreditation Proof (Mandatory)</div><div class="uz" onclick="toast('Document uploaded','s')"><div class="ui">&#128196;</div><div class="ul">Upload accreditation document</div><div class="us">PDF, PNG, or JPG - Max 10MB</div></div></div><button class="btn bp" onclick="subO()">Submit Application</button></div></div>
+</div>
+
+<!-- ADMIN OVERVIEW -->
+<div class="sc" id="sc-admin">
+  <div class="ph"><div class="pht">Admin Overview</div><div class="phs">Platform-wide metrics and controls</div></div>
+  <div class="ct"><div class="sg"><div class="sc2"><div class="sv">14</div><div class="sl">Active Institutions</div><div class="sb2 bup">+2 this week</div></div><div class="sc2"><div class="sv">3,847</div><div class="sl">Total Credentials</div><div class="sb2 bchn">Anchored</div></div><div class="sc2"><div class="sv">12,931</div><div class="sl">Verifications</div><div class="sb2 bup">This month</div></div><div class="sc2"><div class="sv">3</div><div class="sl">Pending Approvals</div><div class="sb2 bwrn">Needs review</div></div></div><div style="display:flex;gap:12px"><button class="btn bp" onclick="sv('inst');sp('ai')">Review Institutions &rarr;</button><button class="btn bo" onclick="sv('inst');sp('al')">View Audit Logs</button></div></div>
+</div>
+
+</div></div>
+
+<!-- LOGIN MODAL -->
+<div class="mbg" id="ml"><div class="modal"><div class="mh"><div style="display:flex;align-items:center;gap:10px"><img src="data:image/png;base64,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" alt="TED Verify" style="height:20px;width:auto;display:block"><span class="mt">Sign in to TED Verify</span></div><button class="btn bg bs" onclick="cm('ml')">&#10005;</button></div><div class="mb"><div class="fr" style="margin-bottom:12px"><label>Email</label><input type="email" id="le" value="admin@tedverify.com"></div><div class="fr" style="margin-bottom:10px"><label>Password</label><input type="password" id="lp" value="demo1234"></div><div style="font-size:12px;color:var(--ink-4);background:var(--brand-faint);padding:8px 10px;border-radius:6px"><strong>Admin:</strong> admin@tedverify.com / demo1234 &nbsp;|&nbsp; <strong>Inst:</strong> inst@unical.edu.ng / demo1234</div></div><div class="mf"><button class="btn bo" onclick="cm('ml')">Cancel</button><button class="btn bp" onclick="login()">Sign in &rarr;</button></div></div></div>
+<!-- CERT MODAL -->
+<div class="mbg" id="mc"><div class="modal" style="max-width:720px"><div class="mh"><span class="mt">Certificate Preview</span><button class="btn bg bs" onclick="cm('mc')">&#10005;</button></div><div class="mb" id="mc-body"></div><div class="mf"><button class="btn bo" onclick="cm('mc')">Close</button><button class="btn bp" onclick="toast('PDF downloaded','s');cm('mc')">&#8595;&nbsp;Download PDF</button></div></div></div>
+<!-- APPROVE MODAL -->
+<div class="mbg" id="ma"><div class="modal"><div class="mh"><span class="mt">Review Application</span><button class="btn bg bs" onclick="cm('ma')">&#10005;</button></div><div class="mb" id="ma-body"></div><div class="mf"><button class="btn bd bs" onclick="rejI()">Reject</button><button class="btn bo" onclick="cm('ma')">Cancel</button><button class="btn bp" onclick="appI()">Approve &#10003;</button></div></div></div>
+<div id="toast"></div>
+
+<script>
+/* ── DATA ── */
+var ALPHA='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+var WL='data:image/png;base64,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';
+var pendI=null;
+var insts=[
+  {id:'i1',name:'University of Calabar',code:'UNICAL',email:'reg@unical.edu.ng',body:'NUC',acn:'NUC/2021/001',creds:247,verifs:1203},
+  {id:'i2',name:'Lagos State University',code:'LASU',email:'reg@lasu.edu.ng',body:'NUC',acn:'NUC/2019/008',creds:512,verifs:3401},
+  {id:'i3',name:'Yaba College',code:'YABATECH',email:'admin@yabatech.edu.ng',body:'NBTE',acn:'NBTE/2020/015',creds:389,verifs:2100}
+];
+var pendInsts=[
+  {id:'p1',name:'Covenant University',code:'CU',email:'registrar@covenantuniversity.edu.ng',body:'NUC',acn:'NUC/2024/034',date:'2025-03-10'},
+  {id:'p2',name:'Fed Poly Ado-Ekiti',code:'FEDPOLYADO',email:'info@fedpolyado.edu.ng',body:'NBTE',acn:'NBTE/2025/011',date:'2025-03-14'},
+  {id:'p3',name:'Ahmadu Bello University',code:'ABU',email:'vc@abu.edu.ng',body:'NUC',acn:'NUC/2023/007',date:'2025-03-17'}
+];
+var creds=[], logs=[];
+var seedData=[
+  {name:'Adaeze Okonkwo',matric:'UNC/2019/0045',degree:'B.Sc Computer Science',prog:'Computer Science',year:2023,date:'2024-06-15',inst:'UNICAL'},
+  {name:'Emeka Nwosu',matric:'UNC/2018/0112',degree:'B.Eng Electrical Engineering',prog:'Electrical Engineering',year:2022,date:'2023-07-01',inst:'UNICAL'},
+  {name:'Fatima Garba',matric:'UNC/2020/0231',degree:'LLB Law',prog:'Law',year:2024,date:'2024-11-30',inst:'UNICAL'},
+  {name:'Chukwuemeka Eze',matric:'UNC/2017/0008',degree:'M.Sc Economics',prog:'Economics',year:2021,date:'2022-03-15',inst:'UNICAL'},
+  {name:'Aisha Bello',matric:'UNC/2021/0099',degree:'B.Pharm',prog:'Pharmacy',year:2025,date:'2025-01-20',inst:'UNICAL'}
+];
+
+/* ── UTILS ── */
+function genId(l) {
+  var a=new Uint8Array(l*3); crypto.getRandomValues(a);
+  var o='';
+  for(var i=0;i<a.length&&o.length<l;i++){var v=a[i]%64;if(v<36)o+=ALPHA[v];}
+  return o.padEnd(l,'0').slice(0,l);
+}
+function genCId(code){return 'TED-'+code+'-'+genId(10);}
+function sha256(s){return crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)).then(function(b){return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,'0');}).join('');});}
+function dl(ms){return new Promise(function(r){setTimeout(r,ms);});}
+
+/* ── INIT ── */
+function init(){
+  var p=Promise.resolve();
+  seedData.forEach(function(c){
+    p=p.then(function(){
+      var cid=genCId(c.inst);
+      return sha256(JSON.stringify(c)+cid).then(function(h){
+        creds.push(Object.assign({},c,{certId:cid,hash:h,txHash:'0x'+h.slice(0,40),status:'anchored'}));
+      });
+    });
+  });
+  p.then(function(){
+    logs.push(
+      {ts:'2025-03-18 09:42',ev:'VERIFY_REQUEST',actor:'Access Bank HR',certId:creds[0]?creds[0].certId:'',detail:'Verified successfully'},
+      {ts:'2025-03-18 08:30',ev:'CREDENTIAL_ISSUE',actor:'UNICAL Admin',certId:creds[1]?creds[1].certId:'',detail:'Blockchain anchored'},
+      {ts:'2025-03-17 16:11',ev:'INST_APPROVED',actor:'System Admin',certId:'-',detail:'Covenant University approved'},
+      {ts:'2025-03-17 14:05',ev:'VERIFY_REQUEST',actor:'Embassy Portal',certId:creds[2]?creds[2].certId:'',detail:'Verified successfully'},
+      {ts:'2025-03-16 10:22',ev:'BULK_UPLOAD',actor:'LASU Admin',certId:'-',detail:'15 credentials uploaded'}
+    );
+    rAll(); popDemos();
+  });
+}
+
+/* ── NAVIGATION ── */
+function sv(v) {
+  document.querySelectorAll('.sc').forEach(function(s){s.classList.remove('on');});
+  document.getElementById('sb').style.display='none';
+  document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('on');});
+  var m={landing:0,inst:1,verify:2,admin:3,onboard:1};
+  if(m[v]!==undefined) document.querySelectorAll('.nb')[m[v]].classList.add('on');
+  if(v==='landing') document.getElementById('sc-landing').classList.add('on');
+  else if(v==='inst'){document.getElementById('sc-inst').classList.add('on');document.getElementById('sb').style.display='flex';sp('db');}
+  else if(v==='verify') document.getElementById('sc-verify').classList.add('on');
+  else if(v==='onboard') document.getElementById('sc-onboard').classList.add('on');
+  else if(v==='admin') document.getElementById('sc-admin').classList.add('on');
+}
+
+function sp(p) {
+  document.querySelectorAll('[id^="pg-"]').forEach(function(x){x.style.display='none';});
+  document.getElementById('pg-'+p).style.display='block';
+  document.querySelectorAll('.sbb').forEach(function(b){b.classList.remove('on');});
+  var o={db:0,up:1,ce:2,as:3,se:4,ai:5,al:6};
+  var btns=document.querySelectorAll('.sbb');
+  if(o[p]!==undefined&&btns[o[p]]) btns[o[p]].classList.add('on');
+  if(p==='ce') rCerts();
+  if(p==='al') rLogs();
+}
+
+function st(tid,gid) {
+  var g=document.getElementById(gid);
+  g.querySelectorAll('.tp').forEach(function(x){x.classList.remove('on');});
+  document.getElementById(tid).classList.add('on');
+  var tabs=g.previousElementSibling;
+  if(tabs&&tabs.classList.contains('tabs')) tabs.querySelectorAll('.tb2').forEach(function(b){b.classList.toggle('on',b.getAttribute('onclick').indexOf(tid)>-1);});
+}
+
+/* ── AUTH ── */
+function login() {
+  var em=document.getElementById('le').value, pw=document.getElementById('lp').value;
+  if(!em||pw.length<6){toast('Invalid credentials','e');return;}
+  if(em.indexOf('admin')>-1){
+    document.getElementById('rp').textContent='Admin';
+    document.getElementById('an').style.display='block';
+    cm('ml'); sv('inst'); toast('Welcome back, Admin','s');
+  } else {
+    document.getElementById('rp').textContent='UNICAL';
+    cm('ml'); sv('inst'); toast('Welcome back, University of Calabar','s');
+  }
+}
+
+/* ── CREDENTIAL ISSUE ── */
+function issue() {
+  var n=document.getElementById('fn').value.trim();
+  var m=document.getElementById('fm').value.trim();
+  var d=document.getElementById('fd').value.trim();
+  var pr=document.getElementById('fp').value.trim();
+  var y=document.getElementById('fy').value.trim();
+  var dt=document.getElementById('fdt').value;
+  if(!n||!m||!d||!pr||!y||!dt){toast('Please fill in all required fields','e');return;}
+  var dup=creds.filter(function(c){return c.matric===m;}).length>0;
+  document.getElementById('dw').style.display=dup?'block':'none';
+  var btn=document.getElementById('bi');
+  btn.classList.add('loading'); btn.disabled=true;
+  animSteps();
+  dl(500).then(function(){
+    var cid=genCId('UNICAL');
+    return dl(500).then(function(){
+      return sha256(JSON.stringify({cid:cid,n:n,m:m,d:d,pr:pr,y:y,dt:dt})).then(function(h){
+        return dl(700).then(function(){
+          creds.unshift({name:n,matric:m,degree:d,prog:pr,year:parseInt(y),date:dt,inst:'UNICAL',certId:cid,hash:h,txHash:'0x'+h.slice(0,40),status:'anchored'});
+          logs.unshift({ts:new Date().toLocaleString(),ev:'CREDENTIAL_ISSUE',actor:'UNICAL Admin',certId:cid,detail:'Anchored to Polygon'});
+          document.getElementById('st-total').textContent=creds.filter(function(c){return c.inst==='UNICAL';}).length;
+          btn.classList.remove('loading'); btn.disabled=false;
+          clf(); resetSteps();
+          document.getElementById('dw').style.display='none';
+          toast('Issued: '+cid,'s');
+          rRecent(); showCM(creds[0]);
+        });
+      });
+    });
+  });
+}
+
+function animSteps() {
+  ['s1','s2','s3','s4'].forEach(function(id){document.getElementById(id).className='sti';});
+  document.getElementById('s1').className='sti on';
+  setTimeout(function(){document.getElementById('s1').className='sti dn';document.getElementById('s2').className='sti on';},450);
+  setTimeout(function(){document.getElementById('s2').className='sti dn';document.getElementById('s3').className='sti on';},900);
+  setTimeout(function(){document.getElementById('s3').className='sti dn';document.getElementById('s4').className='sti on';},1350);
+  setTimeout(function(){document.getElementById('s4').className='sti dn';},1700);
+}
+function resetSteps(){['s1','s2','s3','s4'].forEach(function(id){document.getElementById(id).className='sti';});document.getElementById('s1').className='sti on';}
+function clf(){['fn','fm','fd','fp','fy','fdt'].forEach(function(id){document.getElementById(id).value='';});}
+function simCsv(){document.getElementById('cpv').style.display='block';toast('CSV parsed: 5 valid records','s');}
+function bulkIss(){toast('Issuing 5 credentials...','s');dl(1600).then(function(){toast('5 certificates anchored to Polygon','s');});}
+
+/* ── VERIFICATION ── */
+function runV() {
+  var raw=document.getElementById('vi').value.trim().toUpperCase();
+  var area=document.getElementById('vra');
+  area.style.display='block';
+  if(!raw){area.innerHTML=errH('Please enter a certificate ID.');return;}
+  if(!/^TED-[A-Z]{2,10}-[A-Z0-9]{10}$/.test(raw)){area.innerHTML=errH('Invalid format. Expected: TED-CODE-10CHARID');return;}
+  area.innerHTML='<div class="card" style="text-align:center;padding:32px"><div style="font-size:28px;margin-bottom:10px">&#9203;</div><div style="color:var(--ink-3)">Checking blockchain...</div></div>';
+  dl(900).then(function(){
+    var found=null;
+    for(var i=0;i<creds.length;i++){if(creds[i].certId===raw){found=creds[i];break;}}
+    if(!found){
+      logs.unshift({ts:new Date().toLocaleString(),ev:'VERIFY_FAIL',actor:'Public Portal',certId:raw,detail:'Not found'});
+      area.innerHTML=errH('Certificate not found. This ID has not been issued or may be invalid.');
+      return;
+    }
+    logs.unshift({ts:new Date().toLocaleString(),ev:'VERIFY_REQUEST',actor:'Public Portal',certId:raw,detail:'Verified successfully'});
+    var qid='qv'+Date.now();
+    area.innerHTML='<div class="card fi"><div class="vh"><div class="vi vok" style="font-size:26px">&#10003;</div><div class="vt" style="color:var(--green)">Certificate Verified</div><div class="vs">Authentic and permanently anchored on Polygon</div></div><div class="dv"></div>'+cCardH(found,qid)+'</div>';
+    setTimeout(function(){var el=document.getElementById(qid);if(el)new QRCode(el,{text:'https://tedverify.com/verify/'+found.certId,width:72,height:72,correctLevel:QRCode.CorrectLevel.H});},120);
+  });
+}
+
+function errH(msg){return '<div class="card fi"><div class="vh"><div class="vi vno" style="font-size:24px">&#10007;</div><div class="vt" style="color:var(--red)">Not Verified</div><div class="vs">'+msg+'</div></div></div>';}
+
+function cCardH(c,qid){
+  var p=c.certId.split('-');
+  return '<div class="cw"><div class="ch"><img src="'+WL+'" alt="TED Verify" class="chl"><div><div class="cin">University of Calabar</div><div class="cis">Accredited by NUC - Federal Republic of Nigeria</div></div></div>'
+    +'<div class="cb"><div class="ctl">Certificate of Award</div><div class="ctt">'+c.degree+'</div>'
+    +'<div class="cff"><div><div class="cfl">Full Name</div><div class="cfv">'+c.name+'</div></div><div><div class="cfl">Program</div><div class="cfv">'+c.prog+'</div></div><div><div class="cfl">Matric Number</div><div class="cfv">'+c.matric+'</div></div><div><div class="cfl">Graduation Year</div><div class="cfv">'+c.year+'</div></div></div>'
+    +'<div class="cir"><div><div class="cil">Certificate ID</div><div class="civ"><span class="sp">'+p[0]+'</span>-<span class="si">'+p[1]+'</span>-<span class="sx">'+p[2]+'</span></div></div>'
+    +'<div id="'+qid+'" style="width:72px;height:72px"></div></div></div>'
+    +'<div class="cf"><div class="cfc"><div class="dot"></div>Polygon Mainnet - Anchored</div>'
+    +'<div class="cfh">'+(c.txHash?c.txHash.slice(0,22)+'...':'Pending')+'</div></div></div>';
+}
+
+function showCM(c){
+  var qid='mq'+Date.now();
+  document.getElementById('mc-body').innerHTML=cCardH(c,qid);
+  sm('mc');
+  setTimeout(function(){var el=document.getElementById(qid);if(el)new QRCode(el,{text:'https://tedverify.com/verify/'+c.certId,width:72,height:72,correctLevel:QRCode.CorrectLevel.H});},120);
+}
+
+function popDemos(){
+  var el=document.getElementById('di'); if(!el)return;
+  creds.slice(0,4).forEach(function(c){
+    var b=document.createElement('button');
+    b.className='btn bo bs'; b.style.fontFamily='DM Mono,monospace'; b.style.fontSize='12px'; b.textContent=c.certId;
+    b.onclick=function(){document.getElementById('vi').value=c.certId;runV();};
+    el.appendChild(b);
+  });
+}
+
+/* ── RENDER TABLES ── */
+function rAll(){rRecent();rCerts();rPending();rApproved();rLogs();rChart();}
+
+function rRecent(){
+  var t=document.getElementById('rc-body'); if(!t)return;
+  t.innerHTML=creds.slice(0,5).map(function(c){
+    return '<tr><td><span class="mono" style="font-size:11.5px;color:var(--brand);font-weight:600">'+c.certId+'</span></td><td style="font-weight:500">'+c.name+'</td><td style="color:var(--ink-3);font-size:12.5px">'+c.degree+'</td><td><span class="pill pc">Anchored</span></td></tr>';
+  }).join('')||'<tr><td colspan="4" style="text-align:center;color:var(--ink-4);padding:20px">No credentials yet</td></tr>';
+}
+
+function rCerts(){
+  var t=document.getElementById('ct-body'); if(!t)return;
+  var q=(document.getElementById('cs')?document.getElementById('cs').value:'').toLowerCase();
+  var list=creds.filter(function(c){return c.name.toLowerCase().indexOf(q)>-1||c.certId.toLowerCase().indexOf(q)>-1;});
+  t.innerHTML=list.map(function(c){
+    return '<tr><td><span class="mono" style="font-size:11.5px;color:var(--brand);font-weight:600">'+c.certId+'</span></td><td style="font-weight:500">'+c.name+'</td><td>'+c.degree+'</td><td style="color:var(--ink-3)">'+c.prog+'</td><td>'+c.year+'</td><td><span class="pill pc">Anchored</span></td><td><button class="btn bo bs" onclick="showCMById(''+c.certId+'')">Preview</button></td></tr>';
+  }).join('')||'<tr><td colspan="7" style="text-align:center;padding:28px;color:var(--ink-4)">No credentials found</td></tr>';
+}
+function fltc(){rCerts();}
+function showCMById(id){var c=creds.filter(function(x){return x.certId===id;})[0];if(c)showCM(c);}
+
+function rPending(){
+  var t=document.getElementById('pt-body'); if(!t)return;
+  t.innerHTML=pendInsts.map(function(i){
+    return '<tr><td style="font-weight:600">'+i.name+'</td><td style="color:var(--ink-3);font-size:12.5px">'+i.email+'</td><td><span class="mono" style="background:var(--brand-light);color:var(--brand);padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600">'+i.code+'</span></td><td style="font-size:12px;color:var(--ink-3)">'+i.body+' - '+i.acn+'</td><td style="font-size:12px;color:var(--ink-4)">'+i.date+'</td><td><button class="btn bp bs" onclick="openApp(''+i.id+'')">Review</button></td></tr>';
+  }).join('')||'<tr><td colspan="6" style="text-align:center;padding:28px;color:var(--ink-4)">No pending applications</td></tr>';
+}
+
+function rApproved(){
+  var t=document.getElementById('at-body'); if(!t)return;
+  t.innerHTML=insts.map(function(i){
+    return '<tr><td style="font-weight:600">'+i.name+'</td><td><span class="mono" style="color:var(--brand);font-weight:600;font-size:12.5px">'+i.code+'</span></td><td>'+i.creds+'</td><td>'+i.verifs.toLocaleString()+'</td><td><span class="pill pg">Active</span></td><td><button class="btn bd bs" onclick="toast('Institution suspended','e')">Suspend</button></td></tr>';
+  }).join('');
+}
+
+function rLogs(){
+  var t=document.getElementById('lg-body'); if(!t)return;
+  var ec={VERIFY_REQUEST:'pg',CREDENTIAL_ISSUE:'pc',INST_APPROVED:'pb',BULK_UPLOAD:'pa',VERIFY_FAIL:'pr'};
+  t.innerHTML=logs.slice(0,25).map(function(l){
+    return '<tr><td class="mono" style="font-size:11.5px;color:var(--ink-4)">'+l.ts+'</td><td><span class="pill '+(ec[l.ev]||'pa')+'">'+l.ev+'</span></td><td style="font-size:12.5px">'+l.actor+'</td><td class="mono tr2" style="font-size:11.5px;color:var(--brand)">'+l.certId+'</td><td style="font-size:12.5px;color:var(--ink-3)">'+l.detail+'</td></tr>';
+  }).join('');
+}
+
+function rChart(){
+  var el=document.getElementById('vc'); if(!el)return;
+  var data=[34,67,45,89,120,76,103],days=['M','T','W','T','F','S','S'],max=Math.max.apply(null,data);
+  el.innerHTML=data.map(function(v,i){
+    return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="height:'+Math.round((v/max)*130)+'px;width:100%;background:var(--brand-light);border-radius:4px 4px 0 0;border-top:2px solid var(--brand-3)"></div><div style="font-size:10px;color:var(--ink-4)">'+days[i]+'</div></div>';
+  }).join('');
+}
+
+/* ── ADMIN ACTIONS ── */
+function openApp(id){
+  pendI=null;
+  for(var i=0;i<pendInsts.length;i++){if(pendInsts[i].id===id){pendI=pendInsts[i];break;}}
+  if(!pendI)return;
+  document.getElementById('ma-body').innerHTML='<div style="margin-bottom:16px"><div style="font-size:12px;color:var(--ink-4);margin-bottom:3px">Institution</div><div style="font-size:18px;font-weight:700">'+pendI.name+'</div><div style="font-size:13px;color:var(--ink-3)">'+pendI.email+'</div></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">'
+    +'<div style="background:var(--brand-faint);border:1px solid var(--brand-mid);border-radius:10px;padding:12px"><div style="font-size:10.5px;color:var(--ink-4);text-transform:uppercase;letter-spacing:.07em">Certificate Prefix</div><div class="mono" style="font-size:14px;color:var(--brand);font-weight:700;margin-top:3px">TED-'+pendI.code+'-XXXXXXXXXX</div></div>'
+    +'<div style="background:var(--surface-2);border:1px solid var(--rule);border-radius:10px;padding:12px"><div style="font-size:10.5px;color:var(--ink-4);text-transform:uppercase;letter-spacing:.07em">Accreditation</div><div style="font-size:13px;font-weight:500;margin-top:3px">'+pendI.body+' - '+pendI.acn+'</div></div></div>'
+    +'<div style="background:var(--surface-2);border:1px solid var(--rule);border-radius:10px;padding:12px;font-size:13px;color:var(--ink-3)">Document submitted - <span style="color:var(--brand);cursor:pointer;font-weight:500" onclick="toast('Document opened','s')">View document</span></div>';
+  sm('ma');
+}
+
+function appI(){
+  if(!pendI)return;
+  for(var i=0;i<pendInsts.length;i++){if(pendInsts[i].id===pendI.id){pendInsts.splice(i,1);break;}}
+  insts.push(Object.assign({},pendI,{status:'approved',creds:0,verifs:0}));
+  logs.unshift({ts:new Date().toLocaleString(),ev:'INST_APPROVED',actor:'Admin',certId:'-',detail:pendI.name+' approved'});
+  var n=pendInsts.length;
+  document.getElementById('pc').textContent=n;
+  document.getElementById('ptc').textContent=n;
+  rPending(); rApproved(); cm('ma');
+  toast(pendI.name+' approved','s'); pendI=null;
+}
+
+function rejI(){
+  if(!pendI)return;
+  for(var i=0;i<pendInsts.length;i++){if(pendInsts[i].id===pendI.id){pendInsts.splice(i,1);break;}}
+  var n=pendInsts.length;
+  document.getElementById('pc').textContent=n;
+  document.getElementById('ptc').textContent=n;
+  rPending(); cm('ma'); toast('Application rejected','e'); pendI=null;
+}
+
+function subO(){
+  var name=document.getElementById('rn').value, code=document.getElementById('rc').value;
+  if(!name||code.length<3){toast('Please fill all required fields','e');return;}
+  toast('Application submitted for '+name+' ('+code+'). Awaiting admin review.','s');
+  setTimeout(function(){sv('landing');},1800);
+}
+
+/* ── MODAL + TOAST ── */
+function sm(id){document.getElementById(id).classList.add('on');}
+function cm(id){document.getElementById(id).classList.remove('on');}
+document.addEventListener('click',function(e){
+  document.querySelectorAll('.mbg.on').forEach(function(m){if(e.target===m)m.classList.remove('on');});
+});
+
+var tt;
+function toast(msg,type){
+  var el=document.getElementById('toast');
+  el.className=''; el.textContent=(type==='s'?'+ ':type==='e'?'x ':'')+msg;
+  el.classList.add('on'); el.classList.add(type==='s'?'s':'e');
+  clearTimeout(tt); tt=setTimeout(function(){el.classList.remove('on');},3400);
+}
+
+init();
+</script>
+</body>
+</html>
