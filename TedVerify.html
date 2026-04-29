@@ -1,3 +1,281 @@
+/**
+ * TED Verify — Supabase Data Layer (supabase.js)
+ * ─────────────────────────────────────────────
+ * Drop this <script src="supabase.js"> BEFORE your main <script> block.
+ * Replace SUPABASE_URL and SUPABASE_ANON_KEY with your project values from:
+ *   Supabase Dashboard → Settings → API
+ *
+ * This module exports a single `DB` object that replaces every in-memory
+ * STORE operation in TedVerify.html. The rest of the JS is unchanged.
+ */
+
+// ── Config ────────────────────────────────────────────────────────────────────
+const SUPABASE_URL      = 'https://bmzgcwfliefpwlxkzhrf.supabase.co/rest/v1/';
+const SUPABASE_ANON_KEY = 'sb_publishable_PZWinwRcE180sm7njNkIoA_93ioQRbD';
+
+// ── Client bootstrap (uses the Supabase CDN build) ────────────────────────────
+// The HTML file must load this first:
+//   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ── Real SHA-256 hash (replaces simHash) ──────────────────────────────────────
+async function sha256(message) {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray  = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Canonical form — field order is fixed so any party can reproduce the hash
+function canonicalCredential({ student_name, matric, degree, program, year, inst_code, certificate_id }) {
+  return `${student_name}|${matric}|${degree}|${program}|${year}|${inst_code}|${certificate_id}`;
+}
+
+// ── Audit helper ──────────────────────────────────────────────────────────────
+async function _audit(event, detail, cert_id = null, inst_code = null, ok = true) {
+  await _sb.from('audit_log').insert({ event, detail, cert_id, inst_code, ok });
+}
+
+// ── DB public API ─────────────────────────────────────────────────────────────
+const DB = {
+
+  // ── Credentials ─────────────────────────────────────────────────────────────
+
+  /**
+   * Verify a certificate by ID.
+   * Returns { data: credential | null, error }
+   */
+  async verifyCert(certificate_id) {
+    const { data, error } = await _sb
+      .from('credentials')
+      .select(`
+        id, certificate_id, student_name, matric,
+        degree, program, year, inst_name, inst_code,
+        hash, txn, chain, issued_date
+      `)
+      .eq('certificate_id', certificate_id.trim().toUpperCase())
+      .maybeSingle();
+
+    if (!error && data) {
+      await _audit('VERIFIED', `${certificate_id} verified`, certificate_id, data.inst_code, true);
+    } else if (!error && !data) {
+      await _audit('VERIFY_FAIL', `${certificate_id} not found`, certificate_id, null, false);
+    }
+    return { data, error };
+  },
+
+  /**
+   * Issue a single credential.
+   * Writes to Supabase via a backend endpoint (POST /api/issue).
+   * The anon key cannot write directly — RLS blocks it.
+   * Replace '/api/issue' with your actual backend URL.
+   *
+   * Returns { data: credential | null, error: string | null }
+   */
+  async issueCert({ student_name, matric, degree, program, year, inst_id, inst_name, inst_code }) {
+    // Generate certificate ID client-side (server will verify uniqueness)
+    const alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const arr   = new Uint8Array(10);
+    crypto.getRandomValues(arr);
+    const suffix = Array.from(arr).map(b => alpha[b % alpha.length]).join('');
+    const certificate_id = `TED-${inst_code}-${suffix}`;
+
+    // Real SHA-256 hash
+    const hash = await sha256(canonicalCredential({ student_name, matric, degree, program, year, inst_code, certificate_id }));
+
+    const payload = {
+      certificate_id, student_name, matric, degree, program, year,
+      inst_id, inst_name, inst_code, hash,
+      issued_date: new Date().toISOString().slice(0, 10),
+      chain: 'pending',
+    };
+
+    // ── Option A: Direct insert with service role key (for prototyping only)
+    // Swap the anon client for a service-role client if you control the server.
+    // For now, we POST to a thin backend function you'll create in Supabase Edge Functions.
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/issue-credential`, {
+      method:  'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      return { data: null, error: err.error || 'Issue failed' };
+    }
+
+    const data = await res.json();
+    await _audit('ISSUED', `${certificate_id} → ${student_name}`, certificate_id, inst_code, true);
+    return { data, error: null };
+  },
+
+  /**
+   * Check for duplicate matric within an institution.
+   * Returns { isDuplicate: boolean }
+   */
+  async checkDuplicate(matric, inst_id) {
+    const { data } = await _sb
+      .from('credentials')
+      .select('id')
+      .eq('matric', matric)
+      .eq('inst_id', inst_id)
+      .maybeSingle();
+    return { isDuplicate: !!data };
+  },
+
+  /**
+   * Get all credentials for one institution.
+   * Returns { data: credential[], error }
+   */
+  async getInstCredentials(inst_id) {
+    return _sb
+      .from('credentials')
+      .select('id, certificate_id, student_name, matric, degree, program, year, hash, txn, chain, issued_date')
+      .eq('inst_id', inst_id)
+      .order('created_at', { ascending: false });
+  },
+
+  /**
+   * Get all credentials (admin view).
+   * Returns { data: credential[], error }
+   */
+  async getAllCredentials() {
+    return _sb
+      .from('credentials')
+      .select('id, certificate_id, student_name, matric, degree, program, year, inst_name, inst_code, hash, txn, chain, issued_date')
+      .order('created_at', { ascending: false });
+  },
+
+  // ── Institutions ─────────────────────────────────────────────────────────────
+
+  /**
+   * Get all institutions.
+   * Returns { data: institution[], error }
+   */
+  async getAllInstitutions() {
+    return _sb
+      .from('institutions')
+      .select('id, name, code, email, body, acc_no, status, created_at')
+      .order('created_at', { ascending: true });
+  },
+
+  /**
+   * Approve an institution (admin action — goes through backend).
+   * Returns { data, error }
+   */
+  async approveInstitution(id) {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-institution`, {
+      method:  'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({ id, action: 'approve' }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      return { data: null, error: err.error };
+    }
+    const data = await res.json();
+    await _audit('APPROVED', `${data.name} approved`, null, data.code, true);
+    return { data, error: null };
+  },
+
+  /**
+   * Suspend an institution.
+   */
+  async suspendInstitution(id) {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-institution`, {
+      method:  'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({ id, action: 'suspend' }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      return { data: null, error: err.error };
+    }
+    const data = await res.json();
+    await _audit('SUSPENDED', `${data.name} suspended`, null, data.code, false);
+    return { data, error: null };
+  },
+
+  /**
+   * Submit a new institution verification request.
+   */
+  async requestInstitution({ name, code, email, body, acc_no }) {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-institution`, {
+      method:  'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({ action: 'request', name, code, email, body, acc_no }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      return { data: null, error: err.error };
+    }
+    return { data: await res.json(), error: null };
+  },
+
+  // ── Audit Log ────────────────────────────────────────────────────────────────
+
+  /**
+   * Get recent audit log (admin view).
+   * Returns { data: log[], error }
+   */
+  async getAuditLog(limit = 50) {
+    return _sb
+      .from('audit_log')
+      .select('id, event, detail, cert_id, inst_code, ok, created_at')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+  },
+
+  // ── Real-time subscriptions ──────────────────────────────────────────────────
+
+  /**
+   * Subscribe to new credentials for an institution (live dashboard updates).
+   * Returns a Supabase channel — call .unsubscribe() to clean up.
+   */
+  subscribeCredentials(inst_id, onInsert) {
+    return _sb
+      .channel(`credentials:${inst_id}`)
+      .on('postgres_changes', {
+        event:  'INSERT',
+        schema: 'public',
+        table:  'credentials',
+        filter: `inst_id=eq.${inst_id}`,
+      }, payload => onInsert(payload.new))
+      .subscribe();
+  },
+
+  /**
+   * Subscribe to institution status changes (admin panel live updates).
+   */
+  subscribeInstitutions(onChange) {
+    return _sb
+      .channel('institutions:all')
+      .on('postgres_changes', {
+        event:  '*',
+        schema: 'public',
+        table:  'institutions',
+      }, payload => onChange(payload))
+      .subscribe();
+  },
+};
+
+// Expose globally so the inline <script> in TedVerify.html can call DB.*
+window.DB = DB;
+window.sha256 = sha256;
+window.canonicalCredential = canonicalCredential;
+  
 <!DOCTYPE html>
 <html lang="en">
 <head>
